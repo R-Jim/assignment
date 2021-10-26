@@ -1,18 +1,15 @@
 package server
 
 import (
-	// "net/http"
+	"jim/twitter/pkg/services"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Run() {
 	router := gin.Default()
-	// router.GET("/test", getHello)
+	router.GET("/users", services.GetUsers)
+	router.POST("/users", services.CreateUser)
 	router.Run("localhost:8080")
 
 }
-
-// func getHello(c *gin.Context) {
-// 	c.IndentedJSON(http.StatusOK, "{hi: 'hello'}")
-// }
