@@ -8,5 +8,9 @@ import (
 )
 
 func AuthenticationError(c *gin.Context, details string) {
-	c.JSON(http.StatusUnauthorized, &dao.Error{Code: http.StatusUnauthorized, Details: details})
+	Error(c, http.StatusUnauthorized, details)
+}
+
+func Error(c *gin.Context, statusCode int, details string) {
+	c.JSON(statusCode, &dao.Error{Code: statusCode, Details: details})
 }

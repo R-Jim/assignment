@@ -12,6 +12,7 @@ func Run() {
 	router.POST("/users", services.TokenAuthMiddleware(), services.CreateUser)
 	router.POST("/login", services.Login)
 	router.POST("/logout", services.TokenAuthMiddleware(), services.Logout)
+	router.POST("/token/refresh", services.RefreshToken)
 	router.Run("localhost:8080")
 
 }
