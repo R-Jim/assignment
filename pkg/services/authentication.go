@@ -51,3 +51,20 @@ func Login(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, tokens)
 }
+
+func TokenAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		accessDetails, err := utils.ExtractTokenMetadata(c.Request)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, "unauthorized")
+			c.Abort()
+			return
+		}
+		if _, err := utils.FetchAuth(accessDetails); err != nil {
+			c.JSON(http.StatusUnauthorized, "unauthorized")
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}

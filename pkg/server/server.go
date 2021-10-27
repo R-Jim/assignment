@@ -8,10 +8,10 @@ import (
 
 func Run() {
 	router := gin.Default()
-	router.GET("/users", services.GetUsers)
-	router.POST("/users", services.CreateUser)
+	router.GET("/users", services.TokenAuthMiddleware(), services.GetUsers)
+	router.POST("/users", services.TokenAuthMiddleware(), services.CreateUser)
 	router.POST("/login", services.Login)
-	router.POST("/logout", services.Logout)
+	router.POST("/logout", services.TokenAuthMiddleware(), services.Logout)
 	router.Run("localhost:8080")
 
 }

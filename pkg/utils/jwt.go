@@ -96,17 +96,6 @@ func VerifyToken(r *http.Request) (*jwt.Token, error) {
 	return token, nil
 }
 
-func TokenValid(r *http.Request) error {
-	token, err := VerifyToken(r)
-	if err != nil {
-		return err
-	}
-	if _, ok := token.Claims.(jwt.Claims); !ok && !token.Valid {
-		return err
-	}
-	return nil
-}
-
 func ExtractTokenMetadata(r *http.Request) (*dao.AccessDetails, error) {
 	token, err := VerifyToken(r)
 	if err != nil {

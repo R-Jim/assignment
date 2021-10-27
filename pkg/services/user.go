@@ -3,7 +3,6 @@ package services
 import (
 	"jim/twitter/pkg/dao"
 	"jim/twitter/pkg/db"
-	"jim/twitter/pkg/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,10 +19,6 @@ func CreateUser(c *gin.Context) {
 }
 
 func GetUsers(c *gin.Context) {
-	if _, ok := utils.VerifyRequest(c); !ok {
-		return
-	}
-
 	users := []dao.User{}
 	db.MYSQL.Find(&users)
 	c.JSON(http.StatusOK, gin.H{"data": users})
