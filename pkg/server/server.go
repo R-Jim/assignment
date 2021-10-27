@@ -11,6 +11,7 @@ func Run() {
 	router.GET("/users", services.GetUsers)
 	router.POST("/users", services.CreateUser)
 	router.POST("/login", services.Login)
+	router.POST("/logout", services.Logout)
 	router.Run("localhost:8080")
 
 }

@@ -63,6 +63,14 @@ func CreateAuth(userid uint64, token *dao.Token) error {
 	return nil
 }
 
+func DeleteAuth(givenUuid string) (int64, error) {
+	deleted, err := db.REDIS.Del(givenUuid).Result()
+	if err != nil {
+		return 0, err
+	}
+	return deleted, nil
+}
+
 func ExtractToken(r *http.Request) string {
 	bearToken := r.Header.Get("Authorization")
 	//normally Authorization the_token_xxx
