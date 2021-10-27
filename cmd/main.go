@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
-	db.Init()
+	db.InitMySQL()
+	db.InitRedis()
 	server.Run()
 }

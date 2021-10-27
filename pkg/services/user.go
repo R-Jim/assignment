@@ -10,12 +10,16 @@ import (
 
 func CreateUser(c *gin.Context) {
 	user := new(dao.User)
-	db.DB.Create(user)
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, "Invalid json provided")
+		return
+	}
+	db.MYSQL.Create(user)
 	c.JSON(http.StatusOK, gin.H{"data": user})
 }
 
 func GetUsers(c *gin.Context) {
 	users := []dao.User{}
-	db.DB.Find(&users)
+	db.MYSQL.Find(&users)
 	c.JSON(http.StatusOK, gin.H{"data": users})
 }
