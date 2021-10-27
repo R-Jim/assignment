@@ -12,12 +12,12 @@ import (
 func Logout(c *gin.Context) {
 	accessDetails, err := utils.ExtractTokenMetadata(c.Request)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, "unauthorized")
+		utils.AuthenticationError(c, "Unable to extract token metadata")
 		return
 	}
 	deleted, delErr := utils.DeleteAuth(accessDetails.AccessUuid)
 	if delErr != nil || deleted == 0 { //if any goes wrong
-		c.JSON(http.StatusUnauthorized, "unauthorized")
+		utils.AuthenticationError(c, "Unable to remove Authentication info")
 		return
 	}
 	c.JSON(http.StatusOK, "Successfully logged out")
@@ -56,12 +56,12 @@ func TokenAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		accessDetails, err := utils.ExtractTokenMetadata(c.Request)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, "unauthorized")
+			utils.AuthenticationError(c, "Unable to extract token metadata")
 			c.Abort()
 			return
 		}
 		if _, err := utils.FetchAuth(accessDetails); err != nil {
-			c.JSON(http.StatusUnauthorized, "unauthorized")
+			utils.AuthenticationError(c, "Error when Fetching Authentication info")
 			c.Abort()
 			return
 		}
