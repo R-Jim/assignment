@@ -28,5 +28,5 @@ func InitMySQL() {
 }
 
 func migrate() {
-	MYSQL.AutoMigrate(&dao.User{})
+	MYSQL.AutoMigrate(&dao.User{}, &dao.Tweet{}, &dao.Like{})
 }
