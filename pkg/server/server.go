@@ -13,7 +13,8 @@ func Run() {
 	router.POST("/users", services.TokenAuthMiddleware(), services.CreateUser)
 	//Tweets
 	router.POST("/tweets", services.TokenAuthMiddleware(), services.CreateTweet)
-	router.PUT("/tweets/:tweetid/users/:userid/like", services.TokenAuthMiddleware(), services.LikeTweet)
+	router.PUT("/tweets/:tweetID/users/:userID/like", services.TokenAuthMiddleware(), services.LikeTweet)
+	router.PUT("/tweets/:tweetID/users/:userID/unlike", services.TokenAuthMiddleware(), services.UnlikeTweet)
 	//Authentication
 	router.POST("/login", services.Login)
 	router.POST("/logout", services.TokenAuthMiddleware(), services.Logout)

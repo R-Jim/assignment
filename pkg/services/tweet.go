@@ -1,11 +1,11 @@
 package services
 
 import (
+	"errors"
 	"jim/twitter/pkg/dao"
 	"jim/twitter/pkg/db"
 	"jim/twitter/pkg/utils"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -25,24 +25,39 @@ func CreateTweet(c *gin.Context) {
 }
 
 func LikeTweet(c *gin.Context) {
-	var tweetid, userid uint
-	if id, err := strconv.Atoi(c.Param("tweetid")); err != nil {
-		utils.Error(c, http.StatusUnprocessableEntity, "Invalid Tweet Id provided")
+	tweetID, userID, ok := utils.GetUserIDAndTweetID(c)
+	if !ok {
+		utils.Error(c, http.StatusUnprocessableEntity, "Invalid Tweet ID or User ID provided")
 		return
-	} else {
-		tweetid = uint(id)
 	}
-	if id, err := strconv.Atoi(c.Param("userid")); err != nil {
-		utils.Error(c, http.StatusUnprocessableEntity, "Invalid User Id provided")
-		return
-	} else {
-		userid = uint(id)
-	}
+
 	tweet := new(dao.Tweet)
-	if err := db.MYSQL.Find(&tweet, "id = ?", tweetid).Error; err == nil {
-		if err := db.MYSQL.Create(&dao.Like{TweetId: tweetid, UserId: uint(userid)}).Error; err == nil {
+	if tweet = utils.GetTweet(tweetID); tweet != nil {
+		if err := db.MYSQL.Create(&dao.Like{TweetID: tweetID, UserID: userID}).Error; err == nil {
 			db.MYSQL.Model(&tweet).UpdateColumn("like_count", gorm.Expr("like_count + 1"))
 			tweet.LikeCount += 1
+		}
+		c.JSON(http.StatusOK, gin.H{"data": tweet})
+	} else {
+		utils.Error(c, http.StatusNotFound, "Cannot find tweet")
+	}
+}
+
+func UnlikeTweet(c *gin.Context) {
+	tweetID, userID, ok := utils.GetUserIDAndTweetID(c)
+	if !ok {
+		utils.Error(c, http.StatusUnprocessableEntity, "Invalid Tweet ID or User ID provided")
+		return
+	}
+
+	tweet := new(dao.Tweet)
+	if tweet = utils.GetTweet(tweetID); tweet != nil {
+		like := &dao.Like{TweetID: tweetID, UserID: userID}
+		if err := db.MYSQL.Where(like).First(&like).Error; !errors.Is(err, gorm.ErrRecordNotFound) {
+			if err := db.MYSQL.Delete(like).Error; err == nil {
+				db.MYSQL.Model(&tweet).UpdateColumn("like_count", gorm.Expr("like_count - 1"))
+				tweet.LikeCount -= 1
+			}
 		}
 		c.JSON(http.StatusOK, gin.H{"data": tweet})
 	} else {

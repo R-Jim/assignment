@@ -113,7 +113,7 @@ func ExtractTokenMetadata(r *http.Request) (*dao.AccessDetails, error) {
 		}
 		return &dao.AccessDetails{
 			AccessUuid: accessUuid,
-			UserId:     userId,
+			UserID:     userId,
 		}, nil
 	}
 	return nil, err

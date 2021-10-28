@@ -1,8 +1,8 @@
 package dao
 
 type Like struct {
-	TweetId uint  `gorm:"primaryKey"`
-	UserId  uint  `gorm:"primaryKey"`
-	Tweet   Tweet `gorm:"foreignKey:TweetId"`
-	User    User  `gorm:"foreignKey:UserId" json:"-"`
+	TweetID uint  `gorm:"primaryKey"`
+	UserID  uint  `gorm:"primaryKey"`
+	Tweet   Tweet `gorm:"foreignKey:TweetID"`
+	User    User  `gorm:"foreignKey:UserID" json:"-"`
 }
