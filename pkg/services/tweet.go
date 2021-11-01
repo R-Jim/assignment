@@ -25,42 +25,52 @@ func CreateTweet(c *gin.Context) {
 }
 
 func LikeTweet(c *gin.Context) {
-	tweetID, userID, ok := utils.GetUserIDAndTweetID(c)
+	tweet, ok := getTweet(c)
 	if !ok {
-		utils.Error(c, http.StatusUnprocessableEntity, "Invalid Tweet ID or User ID provided")
 		return
 	}
+	accessDetails, _ := utils.ExtractTokenMetadata(c.Request)
+	userID, _ := utils.FetchAuth(accessDetails)
 
-	tweet := new(dao.Tweet)
-	if tweet = utils.GetTweet(tweetID); tweet != nil {
-		if err := db.MYSQL.Create(&dao.Like{TweetID: tweetID, UserID: userID}).Error; err == nil {
+	like := &dao.Like{TweetID: tweet.ID, UserID: uint(userID)}
+	if errors.Is(db.MYSQL.Where(like).First(&like).Error, gorm.ErrRecordNotFound) {
+		if db.MYSQL.Create(like).RowsAffected == 1 {
 			db.MYSQL.Model(&tweet).UpdateColumn("like_count", gorm.Expr("like_count + 1"))
 			tweet.LikeCount += 1
 		}
-		c.JSON(http.StatusOK, gin.H{"data": tweet})
-	} else {
-		utils.Error(c, http.StatusNotFound, "Cannot find tweet")
 	}
+	c.JSON(http.StatusOK, gin.H{"data": tweet})
 }
 
 func UnlikeTweet(c *gin.Context) {
-	tweetID, userID, ok := utils.GetUserIDAndTweetID(c)
+	tweet, ok := getTweet(c)
 	if !ok {
-		utils.Error(c, http.StatusUnprocessableEntity, "Invalid Tweet ID or User ID provided")
 		return
 	}
+	accessDetails, _ := utils.ExtractTokenMetadata(c.Request)
+	userID, _ := utils.FetchAuth(accessDetails)
 
-	tweet := new(dao.Tweet)
-	if tweet = utils.GetTweet(tweetID); tweet != nil {
-		like := &dao.Like{TweetID: tweetID, UserID: userID}
-		if err := db.MYSQL.Where(like).First(&like).Error; !errors.Is(err, gorm.ErrRecordNotFound) {
-			if err := db.MYSQL.Delete(like).Error; err == nil {
-				db.MYSQL.Model(&tweet).UpdateColumn("like_count", gorm.Expr("like_count - 1"))
-				tweet.LikeCount -= 1
-			}
-		}
-		c.JSON(http.StatusOK, gin.H{"data": tweet})
-	} else {
-		utils.Error(c, http.StatusNotFound, "Cannot find tweet")
+	like := &dao.Like{TweetID: tweet.ID, UserID: uint(userID)}
+	if db.MYSQL.Delete(like).RowsAffected == 1 {
+		db.MYSQL.Model(&tweet).UpdateColumn("like_count", gorm.Expr("like_count - 1"))
+		tweet.LikeCount -= 1
 	}
+	c.JSON(http.StatusOK, gin.H{"data": tweet})
+}
+
+func getTweet(c *gin.Context) (tweet *dao.Tweet, ok bool) {
+	tweetID, ok := utils.GetTweetID(c)
+	if !ok {
+		utils.Error(c, http.StatusUnprocessableEntity, "Invalid Tweet ID provided")
+		return
+	}
+	err := db.MYSQL.Where("id = ?", tweetID).First(&tweet).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.Error(c, http.StatusNotFound, "Cannot find tweet")
+	} else if err != nil {
+		utils.Error(c, http.StatusBadRequest, err.Error())
+	} else {
+		return tweet, true
+	}
+	return nil, false
 }
