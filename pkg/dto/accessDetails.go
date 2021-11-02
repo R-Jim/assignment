@@ -1,4 +1,4 @@
-package dao
+package dto
 
 type AccessDetails struct {
 	AccessUuid string
