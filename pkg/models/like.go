@@ -1,4 +1,4 @@
-package dao
+package models
 
 type Like struct {
 	TweetID uint  `gorm:"primaryKey"`

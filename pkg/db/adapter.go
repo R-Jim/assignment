@@ -2,7 +2,7 @@ package db
 
 import (
 	"fmt"
-	"jim/twitter/pkg/dao"
+	"jim/twitter/pkg/models"
 	"os"
 
 	"gorm.io/driver/mysql"
@@ -28,5 +28,5 @@ func InitMySQL() {
 }
 
 func migrate() {
-	MYSQL.AutoMigrate(&dao.User{}, &dao.Tweet{}, &dao.Like{})
+	MYSQL.AutoMigrate(&models.User{}, &models.Tweet{}, &models.Like{})
 }

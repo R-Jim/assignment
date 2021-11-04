@@ -2,8 +2,9 @@ package utils
 
 import (
 	"fmt"
-	"jim/twitter/pkg/dao"
 	"jim/twitter/pkg/db"
+	"jim/twitter/pkg/dto"
+	"jim/twitter/pkg/models"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,8 +15,8 @@ import (
 	"github.com/twinj/uuid"
 )
 
-func CreateToken(userid uint64) (*dao.Token, error) {
-	td := &dao.Token{}
+func CreateToken(userid uint64) (*models.Token, error) {
+	td := &models.Token{}
 	td.AtExpires = time.Now().Add(time.Minute * 15).Unix()
 	td.AccessUuid = uuid.NewV4().String()
 
@@ -47,7 +48,7 @@ func CreateToken(userid uint64) (*dao.Token, error) {
 	return td, nil
 }
 
-func CreateAuth(userid uint64, token *dao.Token) error {
+func CreateAuth(userid uint64, token *models.Token) error {
 	at := time.Unix(token.AtExpires, 0) //converting Unix to UTC(to Time object)
 	rt := time.Unix(token.RtExpires, 0)
 	now := time.Now()
@@ -96,7 +97,7 @@ func VerifyToken(r *http.Request) (*jwt.Token, error) {
 	return token, nil
 }
 
-func ExtractTokenMetadata(r *http.Request) (*dao.AccessDetails, error) {
+func ExtractTokenMetadata(r *http.Request) (*dto.AccessDetails, error) {
 	token, err := VerifyToken(r)
 	if err != nil {
 		return nil, err
@@ -111,7 +112,7 @@ func ExtractTokenMetadata(r *http.Request) (*dao.AccessDetails, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &dao.AccessDetails{
+		return &dto.AccessDetails{
 			AccessUuid: accessUuid,
 			UserID:     userId,
 		}, nil
@@ -119,7 +120,7 @@ func ExtractTokenMetadata(r *http.Request) (*dao.AccessDetails, error) {
 	return nil, err
 }
 
-func FetchAuth(authD *dao.AccessDetails) (uint64, error) {
+func FetchAuth(authD *dto.AccessDetails) (uint64, error) {
 	userid, err := db.REDIS.Get(authD.AccessUuid).Result()
 	if err != nil {
 		return 0, err

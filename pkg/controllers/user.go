@@ -1,15 +1,15 @@
-package services
+package controllers
 
 import (
-	"jim/twitter/pkg/dao"
 	"jim/twitter/pkg/db"
+	"jim/twitter/pkg/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 func CreateUser(c *gin.Context) {
-	user := new(dao.User)
+	user := new(models.User)
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, "Invalid json provided")
 		return
@@ -19,7 +19,7 @@ func CreateUser(c *gin.Context) {
 }
 
 func GetUsers(c *gin.Context) {
-	users := []dao.User{}
+	users := []models.User{}
 	db.MYSQL.Find(&users)
 	c.JSON(http.StatusOK, gin.H{"data": users})
 }

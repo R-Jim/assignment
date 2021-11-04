@@ -1,9 +1,10 @@
-package services
+package controllers
 
 import (
+	"errors"
 	"fmt"
-	"jim/twitter/pkg/dao"
-	"jim/twitter/pkg/db"
+	"jim/twitter/pkg/dto"
+	"jim/twitter/pkg/repository"
 	"jim/twitter/pkg/utils"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"gorm.io/gorm"
 )
 
 func Logout(c *gin.Context) {
@@ -28,26 +30,24 @@ func Logout(c *gin.Context) {
 }
 
 func Login(c *gin.Context) {
-	var u dao.User
-	if err := c.ShouldBindJSON(&u); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, "Invalid json provided")
+	var requestBody dto.LoginRequestBody
+	if err := utils.GetAndValidateRequestBody(c, &requestBody); err != nil {
+		utils.ValidationError(c)
 		return
 	}
-	user := dao.User{}
-	db.MYSQL.Find(&user)
-	//compare the user from the request, with the one we defined:
-	if user.Username != u.Username || user.Password != u.Password {
-		c.JSON(http.StatusUnauthorized, "Please provide valid login details")
+	user, err := repository.GetUserByUsernameAndPassword(requestBody.Username, requestBody.Password)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		utils.AuthenticationError(c, "Please provide valid login details")
 		return
 	}
 	token, err := utils.CreateToken(uint64(user.ID))
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err.Error())
+		utils.Error(c, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
-	saveErr := utils.CreateAuth(uint64(user.ID), token)
-	if saveErr != nil {
-		c.JSON(http.StatusUnprocessableEntity, saveErr.Error())
+	err = utils.CreateAuth(uint64(user.ID), token)
+	if err != nil {
+		utils.Error(c, http.StatusUnprocessableEntity, err.Error())
 	}
 	tokens := map[string]string{
 		"access_token":  token.AccessToken,
@@ -74,12 +74,12 @@ func TokenAuthMiddleware() gin.HandlerFunc {
 }
 
 func RefreshToken(c *gin.Context) {
-	mapToken := map[string]string{}
-	if err := c.ShouldBindJSON(&mapToken); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, err.Error())
+	var requestBody dto.RefreshTokenRequestBody
+	if err := utils.GetAndValidateRequestBody(c, &requestBody); err != nil {
+		utils.ValidationError(c)
 		return
 	}
-	refreshToken := mapToken["refresh_token"]
+	refreshToken := requestBody.RefreshToken
 
 	//verify the token
 	token, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
